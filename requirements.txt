@@ -1,0 +1,4 @@
+tabulate==0.8.9
+requests==2.25.1
+logger==1.4
+click==7.1.2
