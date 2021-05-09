@@ -42,8 +42,6 @@ def run(show, pincode, announce):
 		for i in range(5):
 			sleep(2)
 			say("Great! Slot found, book the appointment", "Alex")
-
-
 	else:
 		click.secho("No slot found... will try again!", fg='red', bold=True)
 		say("No slot found!")
