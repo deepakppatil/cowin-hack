@@ -1,5 +1,7 @@
 # cowin-hack
 
+CLI written for announcing the co-win vaccination booking. 
+
 ## Setup (MacOS)
 
 ##### Requirements
