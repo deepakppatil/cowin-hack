@@ -37,7 +37,7 @@ def run(show, pincode, announce):
 	click.secho(msg, fg='yellow', bold=True) 
 	date = datetime.today().strftime('%d-%m-%Y')
 	output = crawler(show, pincode, announce).start_process(date)
-	if len(output) == 0:
+	if len(output) > 0:
 		click.secho(tabulate(output, headers=['Name', 'Capacity', 'Vaccine', 'Address']), fg='yellow', bold=True)
 		for i in range(5):
 			sleep(2)
