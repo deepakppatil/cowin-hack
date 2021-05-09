@@ -1,8 +1,9 @@
-#Author: deepak patil
 import logging
 import traceback
 import requests
 import time
+
+__author__ = "Deepak Patil"
 
 from tabulate import tabulate
 from time import sleep
@@ -16,10 +17,11 @@ class crawler:
     # base url
     base = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id=392&date="
 
-    def __init__(self, show, pincode):
+    def __init__(self, show, pincode, announce=False):
         log.debug("__inside__")
         self.show = show
         self.pincode = pincode
+        self.announce = announce
         
         
     def start_process(self, date):
