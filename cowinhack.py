@@ -44,14 +44,16 @@ def run(show_available, pincode, district, mute, console):
 	try:
 		output = crawler(show_available, pincode, district).process(date)
 		slot_found = False
-
-		strg = ""
-		if len(output) > 0:
-			for avail in output:
-				strg = "{0} {1}".format(strg, avail[1])
-		if len(strg) > 0:
-			slot_found = True
-
+		
+		for ox in output:
+			if ox[2] > 0:
+				slot_found = True
+				break
+		# strg = ""
+		# if len(output) > 0:
+		# 	for avail in output:
+		# 		strg = "{0} {1}".format(strg, avail[1])
+		# print(strg)
 		if slot_found or console:
 			click.secho("{0} - Slot found.".format(datetime.today().strftime('%d-%B-%Y %H:%M:%S')), fg='green', bold=True) 
 			click.secho(tabulate(output, headers=_headers), fg='green', bold=True)
@@ -66,7 +68,6 @@ def run(show_available, pincode, district, mute, console):
 	except Exception as e:
 		click.secho("{} - Site is down.".format(datetime.today().strftime('%d-%m-%Y %H:%M:%S')), fg='red', bold=True)
 		say("Site is down", "Alex")
-
 
 
 @main.command(help='start the crawler')
