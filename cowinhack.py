@@ -21,12 +21,12 @@ def main():
 	pass
 
 
-def execute(delay, task, show_available, pincode, district, speak_on_available, console):
+def execute(delay, task, show_available, pincode, district, mute, console):
 	next_time = time.time() + delay
 	while True:
 		time.sleep(max(0, next_time - time.time()))
 		try:
-			task(show_available, pincode, district, speak_on_available, console)
+			task(show_available, pincode, district, mute, console)
 		except Exception:
 			traceback.print_exc()
 			click.secho('Problem while executing repetitive task.', fg='red', bold=True) 
@@ -38,9 +38,7 @@ def say(msg = "Finish", voice = "Victoria"):
     os.system(f'say -v {voice} {msg}')
 
 
-def run(show_available, pincode, district, speak_on_available, console):
-	msg = "fetching data form cowin for {0}....".format(datetime.today().strftime('%d-%B-%Y %H:%M:%S'))
-	click.secho(msg, fg='yellow', bold=True) 
+def run(show_available, pincode, district, mute, console):
 	date = datetime.today().strftime('%d-%m-%Y')
 	output = crawler(show_available, pincode, district).process(date)
 
@@ -51,6 +49,8 @@ def run(show_available, pincode, district, speak_on_available, console):
 			break;
 
 	if slot_found or console:
+		msg = "Got results form cowin for {0}....".format(datetime.today().strftime('%d-%B-%Y %H:%M:%S'))
+		click.secho(msg, fg='yellow', bold=True) 
 		click.secho(tabulate(output, headers=_headers), fg='yellow', bold=True)
 
 	if slot_found:
@@ -59,7 +59,7 @@ def run(show_available, pincode, district, speak_on_available, console):
 			say("Slot found, book the appointment", "Alex")
 	else:
 		click.secho("No slot found... will try again!", fg='red', bold=True)
-		if speak_on_available is False:
+		if mute is False:
 			say("No slots found!")
 
 
@@ -71,13 +71,13 @@ def run(show_available, pincode, district, speak_on_available, console):
 @click.option('-p','--pincode', type=int, help='Provide pincide to start the crawler.')
 @click.option('-d','--district', type=int, default=392,
 			  help='Provide district code to filter the crawler, default is Thane')
-@click.option('-a', '--speak-on-available', default=False, is_flag=True,
-			  help='Announce only when slots are available.')
+@click.option('-m', '--mute', default=False, is_flag=True,
+			  help='Mute repeated announcement if slots are not available, announce only when slots are available.')
 @click.option('-c', '--console/--no-console', default=False, is_flag=True,
 			  help='Print list of centers even if slots not available.')
-def start(interval, show_available, pincode, district, speak_on_available, console):
+def start(interval, show_available, pincode, district, mute, console):
 	click.secho('initialising crawler....', fg='cyan') 
-	execute(interval, run, show_available, pincode, district, speak_on_available, console)
+	execute(interval, run, show_available, pincode, district, mute, console)
 
 
 @main.command(help='List down all the centers with address')

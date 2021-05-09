@@ -11,11 +11,12 @@ from datetime import datetime
 
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
 log = logging.getLogger('__name__')
+urllib3_logger = logging.getLogger('urllib3')
+urllib3_logger.setLevel(logging.CRITICAL)
 
 class crawler:
 
     def __init__(self, show_available, pincode, district):
-        log.debug("__inside__")
         self.show = show_available
         self.pincode = pincode
         self.district = district
