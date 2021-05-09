@@ -53,20 +53,18 @@ def run(show_available, pincode, district, mute, console):
 			slot_found = True
 
 		if slot_found or console:
-			msg = "Got results form cowin for {0}....".format(datetime.today().strftime('%d-%B-%Y %H:%M:%S'))
-			click.secho(msg, fg='yellow', bold=True) 
-			click.secho(tabulate(output, headers=_headers), fg='yellow', bold=True)
-
-		if slot_found:
+			click.secho("{0} - Slot found.".format(datetime.today().strftime('%d-%B-%Y %H:%M:%S')), fg='green', bold=True) 
+			click.secho(tabulate(output, headers=_headers), fg='green', bold=True)
 			for i in range(3):
 				sleep(3)
 				say("Slot found in {0}".format(output[0][0]), "Alex")
 		else:
-			click.secho("No slot found... will try again!", fg='red', bold=True)
+			click.secho("{} - No slot found.".format(datetime.today().strftime('%d-%m-%Y %H:%M:%S')), fg='red', bold=True)
 			if mute is False:
 				say("No slots found!")
+
 	except Exception as e:
-		print("Site is down")
+		click.secho("{} - Site is down.".format(datetime.today().strftime('%d-%m-%Y %H:%M:%S')), fg='red', bold=True)
 		say("Site is down", "Alex")
 
 
