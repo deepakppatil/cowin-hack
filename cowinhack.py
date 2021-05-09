@@ -10,7 +10,7 @@ from crawler import crawler
 
 __author__ = "Deepak Patil"
 
-_headers=['Name', 'Capacity', 'Vaccine', 'PinCode','Address']
+_headers=['State', 'Name', 'Capacity', 'Vaccine', 'PinCode','Address']
 
 
 @click.group()
@@ -24,9 +24,10 @@ def main():
 def execute(delay, task, show_available, pincode, district, mute, console):
 	next_time = time.time() + delay
 	while True:
-		time.sleep(max(0, next_time - time.time()))
+
 		try:
 			task(show_available, pincode, district, mute, console)
+			time.sleep(max(0, next_time - time.time()))
 		except Exception:
 			traceback.print_exc()
 			click.secho('Problem while executing repetitive task.', fg='red', bold=True) 
@@ -40,27 +41,33 @@ def say(msg = "Finish", voice = "Victoria"):
 
 def run(show_available, pincode, district, mute, console):
 	date = datetime.today().strftime('%d-%m-%Y')
-	output = crawler(show_available, pincode, district).process(date)
+	try:
+		output = crawler(show_available, pincode, district).process(date)
+		slot_found = False
 
-	slot_found = False
-	for avail in output:
-		if avail[1] > 0:
+		strg = ""
+		if len(output) > 0:
+			for avail in output:
+				strg = "{0} {1}".format(strg, avail[1])
+		if len(strg) > 0:
 			slot_found = True
-			break;
 
-	if slot_found or console:
-		msg = "Got results form cowin for {0}....".format(datetime.today().strftime('%d-%B-%Y %H:%M:%S'))
-		click.secho(msg, fg='yellow', bold=True) 
-		click.secho(tabulate(output, headers=_headers), fg='yellow', bold=True)
+		if slot_found or console:
+			msg = "Got results form cowin for {0}....".format(datetime.today().strftime('%d-%B-%Y %H:%M:%S'))
+			click.secho(msg, fg='yellow', bold=True) 
+			click.secho(tabulate(output, headers=_headers), fg='yellow', bold=True)
 
-	if slot_found:
-		for i in range(5):
-			sleep(2)
-			say("Slot found, book the appointment", "Alex")
-	else:
-		click.secho("No slot found... will try again!", fg='red', bold=True)
-		if mute is False:
-			say("No slots found!")
+		if slot_found:
+			for i in range(3):
+				sleep(3)
+				say("Slot found in {0}".format(output[0][0]), "Alex")
+		else:
+			click.secho("No slot found... will try again!", fg='red', bold=True)
+			if mute is False:
+				say("No slots found!")
+	except Exception as e:
+		print("Site is down")
+		say("Site is down", "Alex")
 
 
 
@@ -88,11 +95,14 @@ def start(interval, show_available, pincode, district, mute, console):
 def list(pincode, district, show_available):
 	click.secho('listing {} centers for PinCode: {} and District: {}'.format('only the available' if show_available else 'all the', pincode, district), 
 			fg='yellow', bold=True)
-	output = crawler(show_available, pincode, district).process(datetime.today().strftime('%d-%m-%Y'))
-	if len(output) > 0:
-		click.secho(tabulate(output, headers=_headers), fg='yellow', bold=True)
-	else:
-		click.secho("No centers available...", fg='red', bold=True)
+	try:
+		output = crawler(show_available, pincode, district).process(datetime.today().strftime('%d-%m-%Y'))
+		if len(output) > 0:
+			click.secho(tabulate(output, headers=_headers), fg='yellow', bold=True)
+		else:
+			click.secho("No centers available...", fg='red', bold=True)
+	except Exception as e:
+		click.secho("Site is down", fg='red', bold=True)
 
 
 
