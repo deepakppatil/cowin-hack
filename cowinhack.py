@@ -98,11 +98,16 @@ def start(interval, show_available, pincode, district, mute, console, start_date
 @click.option('-d','--district', type=int, default=392,
 			  help='Provide district code to filter the crawler, default is thane')
 @click.option('-s', '--show-available', is_flag=True, default=False, help='List all centers only if slots are available.')
-def list(pincode, district, show_available):
+@click.option('-sd', '--start-date', type=click.DateTime(formats=["%d-%m-%Y"]), default=date.today().strftime("%d-%m-%Y"),
+			  help='Starting date, default=T.')
+@click.option('-nd', '--no-days', type=int, default=3,
+			  help='No of days from T, default=T+3.')
+def list(pincode, district, show_available, start_date, no_days):
 	click.secho('listing {} centers for PinCode: {} and District: {}'.format('only the available' if show_available else 'all the', pincode, district), 
 			fg='yellow', bold=True)
 	try:
-		output = crawler(show_available, pincode, district, 3).process(datetime.today().strftime('%d-%m-%Y'))
+		date = start_date.strftime('%d-%m-%Y')
+		output = crawler(show_available, pincode, district, no_days).process(date)
 		if len(output) > 0:
 			click.secho(tabulate(output, headers=_headers), fg='yellow', bold=True)
 		else:
