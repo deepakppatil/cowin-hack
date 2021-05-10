@@ -69,7 +69,8 @@ class crawler:
 										  field['state_name'],
 										  field['name'], 
 										  session['available_capacity'], 
-										  session['vaccine'], 
+										  session['vaccine'],
+										  session['min_age_limit'], 
 										  field['pincode'],
 										  "{}, {}".format(field['block_name'], field['address'])]
 							if record is not None:

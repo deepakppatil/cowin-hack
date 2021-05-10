@@ -12,7 +12,7 @@ from crawler import crawler
 
 __author__ = "Deepak Patil"
 
-_headers=['Date', 'State', 'Name', 'Capacity', 'Vaccine', 'PinCode','Address']
+_headers=['Date', 'State', 'Name', 'Capacity', 'Vaccine', 'Age Limit', 'PinCode','Address']
 
 
 @click.group()
@@ -23,12 +23,12 @@ def main():
 	pass
 
 
-def execute(delay, task, show_available, pincode, district, mute, console, start_date, no_days):
+def execute(delay, task, show_available, pincode, district, mute, console, start_date, no_days, min_age, max_age):
 	next_time = time.time() + delay
 	while True:
 
 		try:
-			task(show_available, pincode, district, mute, console, start_date, no_days)
+			task(show_available, pincode, district, mute, console, start_date, no_days, min_age, max_age)
 			time.sleep(max(0, next_time - time.time()))
 		except Exception:
 			traceback.print_exc()
@@ -41,23 +41,31 @@ def say(msg = "Finish", voice = "Victoria"):
     os.system(f'say -v {voice} {msg}')
 
 
-def run(show_available, pincode, district, mute, console, start_date, no_days):
+def run(show_available, pincode, district, mute, console, start_date, no_days, min_age, max_age):
 	# date = datetime.today().strftime('%d-%m-%Y')
 	date = start_date.strftime('%d-%m-%Y')
 	try:
 		output = crawler(show_available, pincode, district, no_days).process(date)
 		slot_found = False
 		empty = True
+		op = []
 		for ox in output:
+			if x[5] >= min_age and ox[5] <= max_age:
+				op.append(op)
+
+		for ox in op:
 			empty = False
 			if ox[3] > 0:
-				slot_found = True
+				op.append(op)
 				break
+	
+		if console:
+			click.secho(tabulate(op, headers=_headers), fg='green', bold=True)
 
-		if slot_found or console and empty is False:
+		if slot_found and empty is False:
 			click.secho("{0} - Slot found.".format(datetime.today().strftime('%d-%B-%Y %H:%M:%S')), 
 				fg='green', bold=True) 
-			click.secho(tabulate(output, headers=_headers), fg='green', bold=True)
+			
 			for i in range(3):
 				sleep(3)
 				say("Slot found in {0}".format(output[0][1]), "Alex")
@@ -88,9 +96,17 @@ def run(show_available, pincode, district, mute, console, start_date, no_days):
 			  help='Starting date, default=T.')
 @click.option('-nd', '--no-days', type=int, default=3,
 			  help='No of days from T, default=T+3.')
-def start(interval, show_available, pincode, district, mute, console, start_date, no_days):
+@click.option('-mal', '--min-age-limit', type=click.Choice(['18+', '45+']), default="18+", help='Min age limit.')
+def start(interval, show_available, pincode, district, mute, console, start_date, no_days, min_age_limit):
 	click.secho('crawler initialised....', fg='cyan') 
-	execute(interval, run, show_available, pincode, district, mute, console, start_date, no_days)
+	if min_age_limit == "18+":
+		min_age = 18
+		max_age = 45
+	else:
+		min_age = 45
+		max_age = 120
+
+	execute(interval, run, show_available, pincode, district, mute, console, start_date, no_days, min_age, max_age)
 
 
 @main.command(help='List down all the centers with address')
