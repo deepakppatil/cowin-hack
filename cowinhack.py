@@ -49,14 +49,14 @@ def run(show_available, pincode, district, mute, console, start_date, no_days, m
 		slot_found = False
 		empty = True
 		op = []
-		for ox in output:
-			if x[5] >= min_age and ox[5] <= max_age:
-				op.append(op)
+		for x in output:
+			if x[5] >= min_age and x[5] <= max_age:
+				op.append(x)
 
-		for ox in op:
+		for y in op:
 			empty = False
-			if ox[3] > 0:
-				op.append(op)
+			if y[3] > 0:
+				slot_found = True
 				break
 	
 		if console:
