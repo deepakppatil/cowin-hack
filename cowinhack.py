@@ -12,7 +12,7 @@ from crawler import crawler
 
 __author__ = "Deepak Patil"
 
-_headers=['Date', 'State', 'Name', 'Capacity', 'Vaccine', 'Age Limit', 'PinCode','Address']
+_headers=['Date', 'State', 'Name', 'Size', 'Vaccine', 'Age', 'slots', 'PinCode','Address']
 
 
 @click.group()
@@ -23,12 +23,12 @@ def main():
 	pass
 
 
-def execute(delay, task, show_available, pincode, district, mute, console, start_date, no_days, min_age, max_age):
+def execute(delay, task, show_available, pincode, district, mute, console, start_date, min_age, max_age):
 	next_time = time.time() + delay
 	while True:
 
 		try:
-			task(show_available, pincode, district, mute, console, start_date, no_days, min_age, max_age)
+			task(show_available, pincode, district, mute, console, start_date, min_age, max_age)
 			time.sleep(max(0, next_time - time.time()))
 		except Exception:
 			traceback.print_exc()
@@ -41,21 +41,18 @@ def say(msg = "Finish", voice = "Victoria"):
     os.system(f'say -v {voice} {msg}')
 
 
-def run(show_available, pincode, district, mute, console, start_date, no_days, min_age, max_age):
-	# date = datetime.today().strftime('%d-%m-%Y')
+def run(show_available, pincode, district, mute, console, start_date, min_age, max_age):
 	date = start_date.strftime('%d-%m-%Y')
 	try:
-		output = crawler(show_available, pincode, district, no_days).process(date)
+		output = crawler(pincode, district).process(date, min_age, max_age, show_available)
 		slot_found = False
 		empty = True
 		op = []
-		for x in output:
-			if x[5] >= min_age and x[5] <= max_age:
-				op.append(x)
 
-		for y in op:
+		for y in output:
 			empty = False
 			if y[3] > 0:
+				op.append(x)
 				slot_found = True
 				break
 	
@@ -85,53 +82,54 @@ def run(show_available, pincode, district, mute, console, start_date, no_days, m
 			  help='Interval in seconds.')
 @click.option('-s', '--show-available', is_flag=True, default=False, 
 			  help='List all centers only if slots are available.')
-@click.option('-p','--pincode', type=int, help='Provide pincide to start the crawler.')
+@click.option('-p','--pincode', type=int, default=None, help='Provide pincide to start the crawler.')
 @click.option('-d','--district', type=int, default=392,
 			  help='Provide district code to filter the crawler, default is Thane')
 @click.option('-m', '--mute', default=False, is_flag=True,
 			  help='Mute repeated announcement if slots are not available, announce only when slots are available.')
 @click.option('-c', '--console/--no-console', default=False, is_flag=True,
 			  help='Print list of centers even if slots not available.')
-@click.option('-sd', '--start-date', type=click.DateTime(formats=["%d-%m-%Y"]), default=date.today().strftime("%d-%m-%Y"),
+@click.option('-dt', '--date', type=click.DateTime(formats=["%d-%m-%Y"]), default=date.today().strftime("%d-%m-%Y"),
 			  help='Starting date, default=T.')
-@click.option('-nd', '--no-days', type=int, default=3,
-			  help='No of days from T, default=T+3.')
-@click.option('-mal', '--min-age-limit', type=click.Choice(['18+', '45+']), default="18+", help='Min age limit.')
-def start(interval, show_available, pincode, district, mute, console, start_date, no_days, min_age_limit):
-	click.secho('crawler initialised....', fg='cyan') 
-	if min_age_limit == "18+":
-		min_age = 18
-		max_age = 45
-	else:
-		min_age = 45
-		max_age = 120
-
-	execute(interval, run, show_available, pincode, district, mute, console, start_date, no_days, min_age, max_age)
+@click.option('-a', '--age', type=click.Choice(['18', '45']), default="18", help='Min age limit.')
+def start(interval, show_available, pincode, district, mute, console, date, age):
+	click.secho('crawler initialised...', fg='cyan') 
+	min_age, max_age = get_age(age)
+	execute(interval, run, show_available, pincode, district, mute, console, date, min_age, max_age)
 
 
 @main.command(help='List down all the centers with address')
-@click.option('-p','--pincode', type=int, help='Provide pincide to list the hospitals.')
+@click.option('-p','--pincode', type=int, default=None, help='Provide pincide to list the hospitals.')
 @click.option('-d','--district', type=int, default=392,
 			  help='Provide district code to filter the crawler, default is thane')
 @click.option('-s', '--show-available', is_flag=True, default=False, help='List all centers only if slots are available.')
-@click.option('-sd', '--start-date', type=click.DateTime(formats=["%d-%m-%Y"]), default=date.today().strftime("%d-%m-%Y"),
+@click.option('-dt', '--date', type=click.DateTime(formats=["%d-%m-%Y"]), default=date.today().strftime("%d-%m-%Y"),
 			  help='Starting date, default=T.')
-@click.option('-nd', '--no-days', type=int, default=3,
-			  help='No of days from T, default=T+3.')
-def list(pincode, district, show_available, start_date, no_days):
+@click.option('-a', '--age', type=click.Choice(['18', '45']), default="18", help='Min age limit.')
+def list(pincode, district, show_available, date, age):
 	click.secho('listing {} centers for PinCode: {} and District: {}'.format('only the available' if show_available else 'all the', pincode, district), 
 			fg='yellow', bold=True)
 	try:
-		date = start_date.strftime('%d-%m-%Y')
-		output = crawler(show_available, pincode, district, no_days).process(date)
+		min_age, max_age = get_age(age)
+		output = crawler(pincode, district).process(date.strftime('%d-%m-%Y'), min_age, max_age, show_available)
+		
 		if len(output) > 0:
 			click.secho(tabulate(output, headers=_headers), fg='yellow', bold=True)
 		else:
 			click.secho("No centers available...", fg='red', bold=True)
 	except Exception as e:
+		click.secho(e, fg='red', bold=True)
 		click.secho("Site is down", fg='red', bold=True)
 
 
+def get_age(min_age_limit):
+	if min_age_limit == "18":
+		min_age = 18
+		max_age = 44
+	else:
+		min_age = 45
+		max_age = 120	
+	return min_age, max_age
 
 if __name__ == "__main__":
 	main()
