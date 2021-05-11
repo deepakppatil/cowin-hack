@@ -23,12 +23,12 @@ def main():
 	pass
 
 
-def execute(delay, task, show_available, pincode, district, mute, console, start_date, min_age, max_age):
+def execute(delay, task, show_available, pincode, district, mute, console, start_date, age):
 	next_time = time.time() + delay
 	while True:
 
 		try:
-			task(show_available, pincode, district, mute, console, start_date, min_age, max_age)
+			task(show_available, pincode, district, mute, console, start_date, age)
 			time.sleep(max(0, next_time - time.time()))
 		except Exception:
 			traceback.print_exc()
@@ -41,31 +41,34 @@ def say(msg = "Finish", voice = "Victoria"):
     os.system(f'say -v {voice} {msg}')
 
 
-def run(show_available, pincode, district, mute, console, start_date, min_age, max_age):
+def run(show_available, pincode, district, mute, console, start_date, age):
 	date = start_date.strftime('%d-%m-%Y')
 	try:
+		min_age, max_age = get_age(age)
 		output = crawler(pincode, district).process(date, min_age, max_age, show_available)
 		slot_found = False
+		total_slots = 0
 		empty = True
 		op = []
 
 		for y in output:
 			empty = False
 			if y[3] > 0:
+				total_slots = y[3] + total_slots
 				op.append(y)
 				slot_found = True
-				break
 	
 		if console:
 			click.secho(tabulate(op, headers=_headers), fg='green', bold=True)
-
+		
 		if slot_found and empty is False:
-			click.secho("{0} - Slot found.".format(datetime.today().strftime('%d-%B-%Y %H:%M:%S')), 
+			msg = "{0} slots found in {1} across centers for {2}+ age".format(total_slots, output[0][1], age)
+			click.secho("{0} - {1}".format(datetime.today().strftime('%d-%B-%Y %H:%M:%S'), msg), 
 				fg='green', bold=True) 
 			
 			for i in range(3):
 				sleep(3)
-				say("Slot found in {0}".format(output[0][1]), "Alex")
+				say(msg, "Alex")
 		else:
 			if mute is False:
 				say("No slots found!")
@@ -94,11 +97,11 @@ def run(show_available, pincode, district, mute, console, start_date, min_age, m
 @click.option('-a', '--age', type=click.Choice(['18', '45']), default="18", help='Min age limit.')
 def start(interval, show_available, pincode, district, mute, console, date, age):
 	click.secho('crawler initialised...', fg='cyan')
-	min_age, max_age = get_age(age)
+	
 	if console: 
 		show_available = False
 
-	execute(interval, run, show_available, pincode, district, mute, console, date, min_age, max_age)
+	execute(interval, run, show_available, pincode, district, mute, console, date, age)
 
 
 @main.command(help='List down all the centers with address')
