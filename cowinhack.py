@@ -97,7 +97,7 @@ def start(interval, show_available, pincode, district, mute, console, date, age)
 	min_age, max_age = get_age(age)
 	if console: 
 		show_available = False
-	print(show_available)
+
 	execute(interval, run, show_available, pincode, district, mute, console, date, min_age, max_age)
 
 
