@@ -9,7 +9,7 @@ __author__ = "Deepak Patil"
 from tabulate import tabulate
 from time import sleep
 
-logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
+logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
 log = logging.getLogger('__name__')
 urllib3_logger = logging.getLogger('urllib3')
 urllib3_logger.setLevel(logging.CRITICAL)
@@ -64,12 +64,9 @@ class crawler:
 								  session['slots'],
 								  field['pincode'],
 								  "{}".format(field['address'])]
-
 						if show_available and int(session['available_capacity']) > 0 and (self.pincode is None or field['pincode'] == self.pincode) and session['min_age_limit'] >= min_age and session['min_age_limit'] <= max_age:
 							output.append(record)
-						elif show_available is False and self.pincode is None and session['min_age_limit'] >= min_age and session['min_age_limit'] <= max_age:
-							output.append(record)
-						elif show_available is False and self.pincode is None:
+						elif show_available is False and (self.pincode is None or field['pincode'] == self.pincode) and session['min_age_limit'] >= min_age and session['min_age_limit'] <= max_age:
 							output.append(record)
 						else:
 							continue

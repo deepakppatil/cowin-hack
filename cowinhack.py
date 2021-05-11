@@ -52,7 +52,7 @@ def run(show_available, pincode, district, mute, console, start_date, min_age, m
 		for y in output:
 			empty = False
 			if y[3] > 0:
-				op.append(x)
+				op.append(y)
 				slot_found = True
 				break
 	
@@ -88,13 +88,16 @@ def run(show_available, pincode, district, mute, console, start_date, min_age, m
 @click.option('-m', '--mute', default=False, is_flag=True,
 			  help='Mute repeated announcement if slots are not available, announce only when slots are available.')
 @click.option('-c', '--console/--no-console', default=False, is_flag=True,
-			  help='Print list of centers even if slots not available.')
+			  help='Print list of centers regardless of availablilty.')
 @click.option('-dt', '--date', type=click.DateTime(formats=["%d-%m-%Y"]), default=date.today().strftime("%d-%m-%Y"),
 			  help='Starting date, default=T.')
 @click.option('-a', '--age', type=click.Choice(['18', '45']), default="18", help='Min age limit.')
 def start(interval, show_available, pincode, district, mute, console, date, age):
-	click.secho('crawler initialised...', fg='cyan') 
+	click.secho('crawler initialised...', fg='cyan')
 	min_age, max_age = get_age(age)
+	if console: 
+		show_available = False
+	print(show_available)
 	execute(interval, run, show_available, pincode, district, mute, console, date, min_age, max_age)
 
 
