@@ -81,15 +81,21 @@ $ python cowinhack.py --help
 
 # For listing all the centers or specific centers
 
-python cowinhack.py list -p 421301
+python cowinhack.py list --district 392 --pincode 421301 --age 45 --show-available 
+#Or short hand
+python cowinhack.py list -d 392 -p 421301 -a 45 -s
+# Search across district
+python cowinhack.py list -d 392 -a 45 -s
 
-# Or just
 
-python cowinhack.py list
+# start the crawler, --interval is in seconds
+python cowinhack.py start --interval 30 --district 392 --age 45 --show-available
 
-# start the crawler
+# mute announcement but print the available hospitals 
+python cowinhack.py start --interval 30 --district 392 --age 45 --token ***** --show-available --mute --console
 
-python cowinhack.py start --show --interval 5 --pincode 421301
+# or use your personal token taken from the co-win.com site
+python cowinhack.py start --interval 30 --district 392 --age 45 --token ***** -s 
 
 ```
 
