@@ -12,7 +12,7 @@ from crawler import crawler
 
 __author__ = "Deepak Patil"
 
-_headers=['Date', 'State', 'Name', 'Size', 'Vaccine', 'Age', 'slots', 'PinCode','Address']
+_headers=['Date', 'State', 'PinCode', 'Name', 'Dose1', 'Dose2', 'Vaccine', 'Age', 'slots']
 
 
 @click.group()
@@ -23,12 +23,12 @@ def main():
 	pass
 
 
-def execute(delay, task, show_available, pincode, district, mute, console, start_date, age):
+def execute(delay, task, show_available, pincode, district, mute, console, start_date, age, token):
 	next_time = time.time() + delay
 	while True:
 
 		try:
-			task(show_available, pincode, district, mute, console, start_date, age)
+			task(show_available, pincode, district, mute, console, start_date, age, token)
 			time.sleep(max(0, next_time - time.time()))
 		except Exception:
 			traceback.print_exc()
@@ -41,20 +41,22 @@ def say(msg = "Finish", voice = "Victoria"):
     os.system(f'say -v {voice} {msg}')
 
 
-def run(show_available, pincode, district, mute, console, start_date, age):
+def run(show_available, pincode, district, mute, console, start_date, age, token):
 	date = start_date.strftime('%d-%m-%Y')
 	try:
 		min_age, max_age = get_age(age)
-		output = crawler(pincode, district).process(date, min_age, max_age, show_available)
+		output = crawler(pincode, district).process(date, min_age, max_age, show_available, token)
 		slot_found = False
-		total_slots = 0
+		total_slots_d1 = 0
+		total_slots_d2 = 0
 		empty = True
 		op = []
 
 		for y in output:
 			empty = False
-			if y[3] > 0:
-				total_slots = y[3] + total_slots
+			if y[4] > 0 or y[5] > 0:
+				total_slots_d1 = y[4] + total_slots_d1
+				total_slots_d2 = y[5] + total_slots_d2
 				op.append(y)
 				slot_found = True
 	
@@ -62,13 +64,14 @@ def run(show_available, pincode, district, mute, console, start_date, age):
 			click.secho(tabulate(op, headers=_headers), fg='green', bold=True)
 		
 		if slot_found and empty is False:
-			msg = "{0} slots found in {1} across centers for {2}+ age".format(total_slots, output[0][1], age)
+			msg = "{0} dose1 and {1} dose2 slots found in {2} across centers for {3}+ age".format(total_slots_d1, total_slots_d2, output[0][1], age)
 			click.secho("{0} - {1}".format(datetime.today().strftime('%d-%B-%Y %H:%M:%S'), msg), 
 				fg='green', bold=True) 
 			
-			for i in range(3):
+			for i in range(2):
 				sleep(3)
-				say(msg, "Alex")
+				if mute is False:
+					say(msg, "Alex")
 		else:
 			if mute is False:
 				say("No slots found!")
@@ -95,13 +98,14 @@ def run(show_available, pincode, district, mute, console, start_date, age):
 @click.option('-dt', '--date', type=click.DateTime(formats=["%d-%m-%Y"]), default=date.today().strftime("%d-%m-%Y"),
 			  help='Starting date, default=T.')
 @click.option('-a', '--age', type=click.Choice(['18', '45']), default="18", help='Min age limit.')
-def start(interval, show_available, pincode, district, mute, console, date, age):
+@click.option('-t','--token', type=str, default=None, help='Provide access token.')
+def start(interval, show_available, pincode, district, mute, console, date, age, token):
 	click.secho('crawler initialised...', fg='cyan')
 	
 	if console: 
 		show_available = False
 
-	execute(interval, run, show_available, pincode, district, mute, console, date, age)
+	execute(interval, run, show_available, pincode, district, mute, console, date, age, token)
 
 
 @main.command(help='List down all the centers with address')
@@ -112,12 +116,13 @@ def start(interval, show_available, pincode, district, mute, console, date, age)
 @click.option('-dt', '--date', type=click.DateTime(formats=["%d-%m-%Y"]), default=date.today().strftime("%d-%m-%Y"),
 			  help='Starting date, default=T.')
 @click.option('-a', '--age', type=click.Choice(['18', '45']), default="18", help='Min age limit.')
-def list(pincode, district, show_available, date, age):
+@click.option('-t','--token', type=str, default=None, help='Provide access token.')
+def list(pincode, district, show_available, date, age, token):
 	click.secho('listing {} centers for PinCode: {} and District: {}'.format('only the available' if show_available else 'all the', pincode, district), 
 			fg='yellow', bold=True)
 	try:
 		min_age, max_age = get_age(age)
-		output = crawler(pincode, district).process(date.strftime('%d-%m-%Y'), min_age, max_age, show_available)
+		output = crawler(pincode, district).process(date.strftime('%d-%m-%Y'), min_age, max_age, show_available, token)
 		
 		if len(output) > 0:
 			click.secho(tabulate(output, headers=_headers), fg='yellow', bold=True)
