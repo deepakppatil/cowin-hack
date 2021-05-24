@@ -12,7 +12,7 @@ from crawler import crawler
 
 __author__ = "Deepak Patil"
 
-_headers=['Date', 'State', 'PinCode', 'Name', 'Dose1', 'Dose2', 'Vaccine', 'Age', 'slots']
+_headers=['Date', 'State/District', 'PinCode', 'Name', 'Dose1', 'Dose2', 'Vaccine', 'Age', 'slots']
 
 
 @click.group()
@@ -23,12 +23,12 @@ def main():
 	pass
 
 
-def execute(delay, task, show_available, pincode, district, mute, console, start_date, age, token):
+def execute(delay, task, show_available, pincode, district, mute, console, start_date, age, token, dose):
 	next_time = time.time() + delay
 	while True:
 
 		try:
-			task(show_available, pincode, district, mute, console, start_date, age, token)
+			task(show_available, pincode, district, mute, console, start_date, age, token, dose)
 			time.sleep(max(0, next_time - time.time()))
 		except Exception:
 			traceback.print_exc()
@@ -41,46 +41,57 @@ def say(msg = "Finish", voice = "Victoria"):
     os.system(f'say -v {voice} {msg}')
 
 
-def run(show_available, pincode, district, mute, console, start_date, age, token):
+def run(show_available, pincode, district, mute, console, start_date, age, token, dose):
 	date = start_date.strftime('%d-%m-%Y')
 	try:
 		min_age, max_age = get_age(age)
 		output = crawler(pincode, district).process(date, min_age, max_age, show_available, token)
-		slot_found = False
-		total_slots_d1 = 0
-		total_slots_d2 = 0
-		empty = True
-		op = []
+		slot_found_d1, slot_found_d2, empty1, empty2 = False, False, True, True
+		total_slots_d1, total_slots_d2 = 0, 0
+		op_dose1, op_dose2 = [], []
 
 		for y in output:
-			empty = False
-			if y[4] > 0 or y[5] > 0:
-				total_slots_d1 = y[4] + total_slots_d1
+			if y[4] > 0:
+				empty1 = False
+				total_slots_d1 = y[4] + total_slots_d1 
+				op_dose1.append(y)
+
+			if y[5] > 0:
+				empty2 = False
 				total_slots_d2 = y[5] + total_slots_d2
-				op.append(y)
-				slot_found = True
-	
-		if console:
-			click.secho(tabulate(op, headers=_headers), fg='green', bold=True)
-		
-		if slot_found and empty is False:
-			msg = "{0} dose1 and {1} dose2 slots found in {2} across centers for {3}+ age".format(total_slots_d1, total_slots_d2, output[0][1], age)
-			click.secho("{0} - {1}".format(datetime.today().strftime('%d-%B-%Y %H:%M:%S'), msg), 
-				fg='green', bold=True) 
-			
-			for i in range(2):
-				sleep(3)
-				if mute is False:
-					say(msg, "Alex")
-		else:
+				op_dose2.append(y)
+				slot_found_d1 = True
+
+		if slot_found_d1 and empty1 is False and (dose == '0' or dose == '1'):
+			click.secho("\n")
+			msg = "{0} dose1 slots found in {1} across centers for {2}+ age".format(total_slots_d1, output[0][1], age)
+			click.secho("{0} - {1}".format(datetime.today().strftime('%d-%B-%Y %H:%M:%S'), msg), fg='cyan', bold=True) 
+			if total_slots_d1 > 0 or console:
+				click.secho(tabulate(op_dose1, headers=_headers), fg='green', bold=True)
 			if mute is False:
-				say("No slots found!")
-				click.secho("{0} - No slot found.".format(datetime.today().strftime('%d-%m-%Y %H:%M:%S')), 
-					fg='red', bold=True)
+				say(msg, "Alex")
+		else:
+			# if mute is False:
+				# say("No slots found!")
+			click.secho("{0} - No slot found.".format(datetime.today().strftime('%d-%m-%Y %H:%M:%S')), fg='red', bold=True)
+
+		if slot_found_d2 and empty2 is False and (dose == '0' or dose == '2'):
+			msg = "{0} dose2 slots found in {1} across centers for {2}+ age".format(total_slots_d2, output[0][1], age)
+			click.secho("{0} - {1}".format(datetime.today().strftime('%d-%B-%Y %H:%M:%S'), msg),  fg='cyan', bold=True) 
+			if total_slots_d2 > 0 or console:
+				click.secho(tabulate(op_dose2, headers=_headers), fg='green', bold=True)
+			if mute is False:
+				say(msg, "Alex")
+		else:
+			# if mute is False:
+			# 	#say("No slots found!")
+			click.secho("{0} - No slot found.".format(datetime.today().strftime('%d-%m-%Y %H:%M:%S')), fg='red', bold=True)
+				
 
 	except Exception as e:
 		click.secho("{} - exception: {}".format(e), fg='red', bold=True)
 		say("API is unavailable", "Alex")
+		raise Exception
 
 
 @main.command(help='start the crawler')
@@ -99,13 +110,14 @@ def run(show_available, pincode, district, mute, console, start_date, age, token
 			  help='Starting date, default=T.')
 @click.option('-a', '--age', type=click.Choice(['18', '45']), default="18", help='Min age limit.')
 @click.option('-t','--token', type=str, default=None, help='Provide access token.')
-def start(interval, show_available, pincode, district, mute, console, date, age, token):
+@click.option('-vd', '--dose', type=click.Choice(['1', '2', '0']), default='0', help='Dose 1, Dose 2, select 0 for all.')
+def start(interval, show_available, pincode, district, mute, console, date, age, token, dose):
 	click.secho('crawler initialised...', fg='cyan')
 	
 	if console: 
 		show_available = False
 
-	execute(interval, run, show_available, pincode, district, mute, console, date, age, token)
+	execute(interval, run, show_available, pincode, district, mute, console, date, age, token, dose)
 
 
 @main.command(help='List down all the centers with address')

@@ -65,7 +65,7 @@ class crawler:
 					record = None
 					for session in field['sessions']:
 						record = [session['date'],
-								  field['state_name'],
+								  field['state_name']+ " " + field['district_name'],
 								  field['pincode'],
 								  field['name'], 
 								  session['available_capacity_dose1'],
