@@ -12,7 +12,7 @@ from crawler import crawler
 
 __author__ = "Deepak Patil"
 
-_headers=['Date', 'State/District', 'PinCode', 'Name', 'Dose1', 'Dose2', 'Vaccine', 'Age', 'slots']
+_headers=['Date', 'District', 'PinCode', 'Name', 'Dose1', 'Dose2', 'Vaccine', 'Age', 'slots']
 
 
 @click.group()
@@ -64,7 +64,7 @@ def run(show_available, pincode, district, mute, console, start_date, age, token
 
 		if slot_found_d1 and empty1 is False and (dose == '0' or dose == '1'):
 			click.secho("\n")
-			msg = "{0} dose1 slots found in {1} across centers for {2}+ age".format(total_slots_d1, output[0][1], age)
+			msg = "{0} dose1 slots found in {1} for {2}+ age".format(total_slots_d1, output[0][1], age)
 			click.secho("{0} - {1}".format(datetime.today().strftime('%d-%B-%Y %H:%M:%S'), msg), fg='cyan', bold=True) 
 			if total_slots_d1 > 0 or console:
 				click.secho(tabulate(op_dose1, headers=_headers), fg='green', bold=True)
@@ -73,10 +73,10 @@ def run(show_available, pincode, district, mute, console, start_date, age, token
 		else:
 			# if mute is False:
 				# say("No slots found!")
-			click.secho("{0} - No slot found.".format(datetime.today().strftime('%d-%m-%Y %H:%M:%S')), fg='red', bold=True)
+			click.secho("{0} - Dose1 No slot found.".format(datetime.today().strftime('%d-%m-%Y %H:%M:%S')), fg='red', bold=True)
 
 		if slot_found_d2 and empty2 is False and (dose == '0' or dose == '2'):
-			msg = "{0} dose2 slots found in {1} across centers for {2}+ age".format(total_slots_d2, output[0][1], age)
+			msg = "{0} dose2 slots found in {1} for {2}+ age".format(total_slots_d2, output[0][1], age)
 			click.secho("{0} - {1}".format(datetime.today().strftime('%d-%B-%Y %H:%M:%S'), msg),  fg='cyan', bold=True) 
 			if total_slots_d2 > 0 or console:
 				click.secho(tabulate(op_dose2, headers=_headers), fg='green', bold=True)
@@ -85,7 +85,7 @@ def run(show_available, pincode, district, mute, console, start_date, age, token
 		else:
 			# if mute is False:
 			# 	#say("No slots found!")
-			click.secho("{0} - No slot found.".format(datetime.today().strftime('%d-%m-%Y %H:%M:%S')), fg='red', bold=True)
+			click.secho("{0} - Dose2 No slot found.".format(datetime.today().strftime('%d-%m-%Y %H:%M:%S')), fg='red', bold=True)
 				
 
 	except Exception as e:
